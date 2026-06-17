@@ -10,8 +10,27 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run typecheck && npm run build"
   },
-  "keywords": [],
-  "author": "",
+  "homepage": "https://github.com/MuchaSsak/lingui-translate-ai#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MuchaSsak/lingui-translate-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MuchaSsak/lingui-translate-ai/issues"
+  },
+  "keywords": [
+    "lingui",
+    "i18n",
+    "localization",
+    "translation",
+    "po",
+    "gettext",
+    "ai",
+    "openrouter",
+    "cli",
+    "typescript"
+  ],
+  "author": "MuchaSsak",
   "license": "MIT",
   "type": "module",
   "dependencies": {
@@ -34,6 +53,8 @@
   "files": [
     "dist",
     "README.md",
+    "CONFIG.md",
+    "CONTRIBUTING.md",
     "LICENSE"
   ]
 }
