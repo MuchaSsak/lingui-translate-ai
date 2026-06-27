@@ -718,6 +718,7 @@ function applyTranslationFixes({
         continue;
       }
       state.po.translations[context][msgid].msgstr = [corrected];
+      originalEntry.currentTranslation = corrected;
       changesMade = true;
       appliedFixes += 1;
       state.totalAppliedFixes += 1;
@@ -737,6 +738,48 @@ function applyTranslationFixes({
     }
   }
   return { changesMade, appliedFixes, ignoredFixes, correctionsByLocale };
+}
+function syncBatchWithCurrentTranslations({
+  batch,
+  onlyEmptyTranslations,
+}: {
+  batch: WorkBatch;
+  onlyEmptyTranslations: boolean;
+}) {
+  for (const [entryKey, entry] of Array.from(batch.idToEntry.entries())) {
+    const currentTranslation =
+      entry.state.po?.translations?.[entry.context]?.[entry.msgid]?.msgstr?.[0] ??
+      "";
+    entry.currentTranslation = currentTranslation;
+    const localeFile = batch.files[entry.locale];
+    if (!localeFile) {
+      batch.idToEntry.delete(entryKey);
+      continue;
+    }
+    if (onlyEmptyTranslations && currentTranslation.trim()) {
+      delete localeFile.trgs[entry.sourceId];
+      batch.idToEntry.delete(entryKey);
+      continue;
+    }
+    localeFile.trgs[entry.sourceId] = currentTranslation;
+  }
+  for (const [locale, localeFile] of Object.entries(batch.files)) {
+    if (Object.keys(localeFile.trgs).length === 0) {
+      delete batch.files[locale];
+    }
+  }
+  const usedSourceIds = new Set<string>();
+  for (const localeFile of Object.values(batch.files)) {
+    for (const sourceId of Object.keys(localeFile.trgs)) {
+      usedSourceIds.add(sourceId);
+    }
+  }
+  for (const sourceId of Object.keys(batch.srcs)) {
+    if (!usedSourceIds.has(sourceId)) {
+      delete batch.srcs[sourceId];
+    }
+  }
+  batch.count = getBatchTargetCount(batch.files);
 }
 function poUnquote(line: string) {
   const match = line.match(/"((?:\\.|[^"])*)"/);
@@ -1007,6 +1050,10 @@ async function processBatch({
         applyTranslationFixes({ fixedDict, idToEntry: batch.idToEntry });
       logger.info(`Applied fixes in batch: ${appliedFixes}`);
       logger.info(`Ignored fixes in batch: ${ignoredFixes}`);
+      syncBatchWithCurrentTranslations({
+        batch,
+        onlyEmptyTranslations: config.onlyEmptyTranslations,
+      });
       if (changesMade) {
         savePatchedLocales({
           sourcePo,

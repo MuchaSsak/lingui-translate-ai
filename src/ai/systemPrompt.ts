@@ -22,25 +22,41 @@ The first user content block contains the stable English source map:
   }
 }
 
-The second user content block contains the dynamic target-language translation data:
+The second user content block contains the dynamic target-language translation data grouped by locale folder:
 {
-  "lng": "Target language name",
-  "loc": "Target BCP-47 locale",
-  "trgs": {
-    "i0": "existing target-language translation",
-    "i1": ""
+  "files": {
+    "pl": {
+      "lng": "Polish",
+      "loc": "pl-PL",
+      "trgs": {
+        "i0": "existing Polish translation",
+        "i1": ""
+      }
+    },
+    "ar": {
+      "lng": "Arabic",
+      "loc": "ar",
+      "trgs": {
+        "i0": "existing Arabic translation",
+        "i1": ""
+      }
+    }
   }
 }
 
-The IDs in "srcs" and "trgs" match exactly.
+The IDs in "srcs" and every locale's "trgs" map match exactly.
 For each ID:
 - "src" is the English source string.
 - "ctx" is optional and may be omitted when no context exists.
-- "trgs[id]" is the existing translation in the target language.
+- "files[locale].lng" is the target language name or label for that locale.
+- "files[locale].loc" is the target BCP-47 locale.
+- "files[locale].trgs[id]" is the existing translation in that target language.
 - An empty string in "trgs" means the translation is missing and MUST be fixed.
 
 ### INPUT HANDLING:
-- Review the entire source map and the entire target map before deciding which corrections to return.
+- Review the entire source map and every locale target map before deciding which corrections to return.
+- Process each locale under "files" independently. Do not stop after fixing the first repeated source ID across locales.
+- For every locale in "files", return corrections for every empty value in that locale's "trgs" map.
 - If "ctx" is provided, USE it as a guiding hint to disambiguate the translation.
 - If "ctx" is omitted, rely on the English source string and full-file context.
 - Do not require an explicit "is_empty" flag. If the target value is "", whitespace-only, missing, null, or unusable, it is empty and invalid.
@@ -115,7 +131,7 @@ For each ID:
 - DO NOT wrap the response in code fences.
 
 ### STRICT LINGUISTIC CONSTRAINT:
-- YOU ARE VALIDATING TRANSLATIONS INTO THE TARGET LANGUAGE AND TARGET LOCALE GIVEN IN THE SECOND USER CONTENT BLOCK.
+- YOU ARE VALIDATING TRANSLATIONS INTO EACH TARGET LANGUAGE AND TARGET LOCALE GIVEN UNDER "files" IN THE SECOND USER CONTENT BLOCK.
 - Corrected output must read as if originally written by a native speaker of the target language.
 - ALWAYS use standard modern target-language spelling, grammar, punctuation, script, and capitalization conventions.
 - DO NOT translate proper nouns and brand names (e.g., "Linkoglot", "Quizlet", "Anki", "Google", "Apple"). Keep them exactly as they are.
