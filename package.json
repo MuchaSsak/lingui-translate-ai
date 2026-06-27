@@ -1,6 +1,6 @@
 {
   "name": "lingui-translate-ai",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "AI-powered translation and repair tools for Lingui JS 🌍",
   "main": "index.js",
   "scripts": {
